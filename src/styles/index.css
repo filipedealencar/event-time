@@ -18,6 +18,10 @@
   background: aquamarine;
 }
 
+td {
+  cursor: pointer;
+}
+
 a {
   font-weight: 500;
   color: #646cff;
