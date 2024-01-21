@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import "./index.css";
+import "../src/styles/index.css";
 import { ChakraProvider } from "@chakra-ui/react";
 import Routers from "./router.tsx";
 
