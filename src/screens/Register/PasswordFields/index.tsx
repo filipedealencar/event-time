@@ -1,5 +1,4 @@
 import {
-  FormControl,
   FormLabel,
   IconButton,
   Input,
@@ -26,7 +25,7 @@ export const PasswordField = forwardRef<HTMLInputElement, InputProps>(
     };
 
     return (
-      <FormControl>
+      <>
         <FormLabel htmlFor="password">Senha</FormLabel>
         <InputGroup>
           <InputRightElement>
@@ -48,7 +47,7 @@ export const PasswordField = forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
         </InputGroup>
-      </FormControl>
+      </>
     );
   }
 );
