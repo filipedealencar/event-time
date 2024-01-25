@@ -1,45 +1,57 @@
-import React, { useLayoutEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { isValidToken } from "../../services/api/events";
-import { getBearerTokenCookie } from "../../data/cookiesUtil";
+import React, { useEffect, useState } from "react";
 import { useToast } from "@chakra-ui/react";
+import { Navigate, Outlet } from "react-router-dom";
+import { getLocalStorage, removeLocalStorage } from "../../data/storageUtil";
+import { isValidToken } from "../../services/api/events";
 
-interface ProtectedRouteProps {
-  children: React.ReactNode;
-}
-
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const token = getBearerTokenCookie();
+export const ComponentReplace: React.FC = ({}) => {
   const toast = useToast();
-  const navigate = useNavigate();
 
-  useLayoutEffect(() => {
+  const showToast = () => {
+    if (!toast.isActive("auth-error-toast")) {
+      return toast({
+        id: "auth-error-toast",
+        position: "top-right",
+        title: "Você não está logado",
+        description: "Faça o login primeiro",
+        status: "error",
+      });
+    }
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      showToast();
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  return <Navigate to="/login" />;
+};
+const ProtectedRoute: React.FC = ({}) => {
+  const [isValid, setIsValid] = useState<boolean | null>(null);
+
+  useEffect(() => {
     const checkTokenValidity = async () => {
-      if (token) {
-        try {
-          const res = await isValidToken(token);
-          if (!res.valid) {
-            throw new Error("Invalid token");
-          }
-        } catch (error) {
-          toast({
-            title: "Você não está logado",
-            description: "Faça o login primeiro",
-            status: "error",
-          });
-          // Redirecionar para a página de login quando o token for inválido
-          navigate("/login");
-        }
-      } else {
-        // Redirecionar para a página de login quando não houver token
-        navigate("/login");
+      try {
+        const token = getLocalStorage("@bearerToken") ?? "";
+        await isValidToken(token);
+        setIsValid(true);
+      } catch (error) {
+        removeLocalStorage("@bearerToken");
+        setIsValid(false);
       }
     };
 
     checkTokenValidity();
-  }, [token, toast]);
+  }, []);
 
-  return <>{children}</>;
+  if (isValid === null) {
+    // Verificação ainda em progresso
+    return null;
+  }
+  return getLocalStorage("@bearerToken") ? <Outlet /> : <ComponentReplace />;
 };
 
 export default ProtectedRoute;

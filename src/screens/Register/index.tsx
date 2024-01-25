@@ -16,7 +16,7 @@ import { PasswordField } from "./PasswordFields";
 import { FormEvent, useState } from "react";
 import { userLogin, userRegister } from "../../services/api/events";
 import { useNavigate } from "react-router-dom";
-import { setBearerTokenCookie } from "../../data/cookiesUtil";
+import { setLocalStorage } from "../../data/storageUtil";
 
 export const Register = () => {
   const [valuesRegister, setValuesRegister] = useState<{
@@ -41,7 +41,7 @@ export const Register = () => {
             userLogin({ username: name, password }).then((res) => {
               if (res.token) {
                 navigate("/");
-                setBearerTokenCookie(res.token);
+                setLocalStorage("@bearerToken", res.token);
               }
             });
           })

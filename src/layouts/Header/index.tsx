@@ -1,7 +1,18 @@
-import React from "react";
-import { Box, Flex, chakra, Avatar } from "@chakra-ui/react";
+import React, { useEffect, useState } from "react";
+import { Box, Flex, chakra, Avatar, Button } from "@chakra-ui/react";
+import { getLocalStorage, removeLocalStorage } from "../../data/storageUtil";
+import { useNavigate } from "react-router-dom";
+import { parseJwt } from "../../helpers/util";
 
 const Header: React.FC = (props) => {
+  const navigate = useNavigate();
+
+  const [userData, setUserData] = useState();
+
+  useEffect(() => {
+    setUserData(parseJwt(getLocalStorage("@bearerToken")));
+  }, [getLocalStorage("@bearerToken")]);
+
   return (
     <Flex
       as="nav"
@@ -118,8 +129,26 @@ const Header: React.FC = (props) => {
         </chakra.svg>
       </Flex>
 
-      <Box display={{ base: "block", md: "block" }} mt={{ base: 4, md: 0 }}>
-        <Avatar name="Dan Abrahmov" src="https://bit.ly/dan-abramov" />
+      <Box
+        display={{ base: "flex", md: "flex" }}
+        alignItems="center"
+        justifyContent="space-between"
+        gap="8px"
+        mt={{ base: 4, md: 0 }}
+      >
+        <Avatar background="#fff" name={userData?.["username"]} />
+        <Button
+          background="none"
+          border="1px solid"
+          padding="10px"
+          height="30px"
+          onClick={() => {
+            removeLocalStorage("@bearerToken");
+            navigate("/login");
+          }}
+        >
+          Sair
+        </Button>
       </Box>
     </Flex>
   );

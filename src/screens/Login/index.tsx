@@ -11,11 +11,67 @@ import {
   Link,
   Stack,
   Text,
+  useToast,
 } from "@chakra-ui/react";
 import { Logo } from "./Logo";
 import { PasswordField } from "./PasswordFields";
+import { FormEvent, useState } from "react";
+import { Navigate, useNavigate } from "react-router-dom";
+import { userLogin } from "../../services/api/events";
+import { getLocalStorage, setLocalStorage } from "../../data/storageUtil";
 
 export const Login = () => {
+  const [valuesLogin, setValuesLogin] = useState<{
+    name: string | undefined;
+    password: string | undefined;
+  }>({ name: undefined, password: undefined });
+
+  const [isLoading, setIsLoading] = useState(false);
+
+  const toast = useToast();
+  const navigate = useNavigate();
+
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    const { name, password } = valuesLogin;
+    if (name && password) {
+      setIsLoading(true);
+
+      userLogin({ username: name, password })
+        .then((res) => {
+          if (res.token) {
+            setLocalStorage("@bearerToken", res.token);
+
+            setIsLoading(true);
+
+            setTimeout(() => {
+              navigate("/", { replace: true });
+            }, 300);
+          }
+        })
+        .catch(() => {
+          console.log("error");
+
+          if (!toast.isActive("login-error-toast")) {
+            return toast({
+              id: "login-error-toast",
+              position: "top-right",
+              title: "Usuário ou senha incorreto",
+              description: "Verifique e tente novamente",
+              status: "error",
+            });
+          }
+        })
+
+        .finally(() => setIsLoading(false)),
+        console.log("Valores do formulário:", valuesLogin);
+    }
+  };
+
+  if (getLocalStorage("@bearerToken") !== null) {
+    return <Navigate to="/" />;
+  }
+
   return (
     <Container
       maxW="lg"
@@ -47,13 +103,29 @@ export const Login = () => {
           bg={{ base: "transparent", sm: "bg.surface" }}
           borderRadius={{ base: "none", sm: "xl" }}
         >
-          <Stack spacing="6">
+          <Stack onSubmit={handleSubmit} as={"form"} spacing="6">
             <Stack spacing="5">
               <FormControl>
-                <FormLabel htmlFor="email">Email</FormLabel>
-                <Input border="2px solid #c2c2c2" id="email" type="email" />
+                <FormLabel htmlFor="name">Nome de Usuário</FormLabel>
+                <Input
+                  required
+                  onChange={({ target }) =>
+                    setValuesLogin((state) => {
+                      return { ...state, name: target.value };
+                    })
+                  }
+                  border="2px solid #c2c2c2"
+                  id="name"
+                  type="name"
+                />
               </FormControl>
-              <PasswordField />
+              <PasswordField
+                onChange={({ target }) =>
+                  setValuesLogin((state) => {
+                    return { ...state, password: target.value };
+                  })
+                }
+              />
             </Stack>
             <HStack justify="space-between">
               <Checkbox defaultChecked>Lembre de mim</Checkbox>
@@ -69,6 +141,8 @@ export const Login = () => {
             </HStack>
             <Stack spacing="6">
               <Button
+                isLoading={isLoading}
+                type="submit"
                 _hover={{ background: "#1a7373" }}
                 background="#3a9797"
                 color="#fff"

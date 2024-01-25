@@ -2,61 +2,199 @@ import {
   Box,
   Stack,
   Container,
-  Button,
-  FormControl,
-  FormLabel,
-  Input,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
   useDisclosure,
-  Textarea,
-  Text,
-  Heading,
-  Divider,
-  Grid,
-  GridItem,
-  Skeleton,
+  useToast,
 } from "@chakra-ui/react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import Header from "../../layouts/Header";
 import interactionPlugin from "@fullcalendar/interaction";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  createEvent,
+  deleteEvent,
+  getEvent,
+  updateEvent,
+} from "../../services/api/events";
+import { getLocalStorage } from "../../data/storageUtil";
+import { EventData } from "../../services/api/types";
+import { ModalActions } from "./ModalActions";
+
+interface PropsEvent {
+  id: string;
+  title: string;
+  description: string;
+  startTime: string;
+  endTime: string;
+}
+
+interface ModalProps {
+  type: "default" | "create" | "edit" | "remove";
+  isLoading: boolean;
+  isOpen: boolean;
+  options: PropsEvent;
+}
 
 export const Calendar = () => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const [isEdit, setIsEdit] = useState(false);
-  const [isRemove, setIsRemove] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const initialRef = React.useRef(null);
-  const finalRef = React.useRef(null);
+  const { onClose } = useDisclosure();
+  const [token, setToken] = useState(getLocalStorage("@bearerToken"));
+  const [dataEvents, setDataEvents] = useState<PropsEvent[]>([]);
+
+  const stateDefaultModal: ModalProps = {
+    type: "default",
+    isLoading: false,
+    isOpen: false,
+    options: {
+      id: "Indisponivel",
+      title: "Título",
+      description: "Indisponivel",
+      startTime: "Indisponivel",
+      endTime: "Indisponivel",
+    },
+  };
+
+  const [modal, setModal] = useState<ModalProps>(stateDefaultModal);
+
+  const toast = useToast();
+
+  console.log(modal);
 
   useEffect(() => {
-    if (!isOpen) {
-      setIsRemove(false);
-      setIsEdit(false);
-    }
-  }, [isOpen]);
+    setToken(getLocalStorage("@bearerToken"));
+  }, [getLocalStorage("@bearerToken")]);
 
-  const handleEditEvent = () => {
-    setIsEdit(true);
-    setIsLoading(true);
+  useEffect(() => {
+    if (token) {
+      getEvent(token).then((res) => {
+        console.log(res);
+        setDataEvents(
+          res.map((event: EventData) => {
+            const { _id, title, description, startTime, endTime } = event;
+            const dateValue = startTime.split("T")[0];
+            return {
+              id: _id,
+              title: title,
+              description,
+              date: dateValue,
+              startTime,
+              endTime,
+            };
+          })
+        );
+      });
+    }
+  }, [modal.isLoading]);
+
+  const handleActionEvent = (
+    event: "default" | "create" | "edit" | "remove"
+  ) => {
+    setModal((state) => {
+      return { ...state, type: event };
+    });
+    setModal((state) => {
+      return { ...state, isLoading: true };
+    });
     setTimeout(() => {
-      setIsLoading(false);
+      setModal((state) => {
+        return { ...state, isLoading: false };
+      });
     }, 2000);
   };
-  const handleRemoveEvent = () => {
-    setIsRemove(true);
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
+
+  const handleDimissEvent = () => {
+    setModal(stateDefaultModal);
+    onClose;
   };
+
+  const handleConfirmationRemoveEvent = (id?: string) => {
+    setModal((state) => {
+      return { ...state, isLoading: true };
+    });
+    if (id) {
+      return toast.promise(
+        deleteEvent(id).finally(() => {
+          return handleDimissEvent();
+        }),
+        {
+          success: {
+            title: "Evento removido com sucesso",
+            description: "Tudo certo",
+          },
+          error: {
+            title: "Erro ao remover evento",
+            description: "Algo deu errado",
+          },
+          loading: {
+            title: "Removendo evento",
+            description: "Por favor, aguarde",
+          },
+        }
+      );
+    }
+
+    return handleDimissEvent();
+  };
+  const handleConfirmationEditEvent = (value: PropsEvent) => {
+    setModal((state) => {
+      return { ...state, isLoading: true };
+    });
+
+    if (value) {
+      const { id, ...rest } = value;
+      return toast.promise(
+        updateEvent(value?.id, { _id: id, ...rest }).finally(() => {
+          return handleDimissEvent();
+        }),
+        {
+          success: {
+            title: "Evento editado com sucesso",
+            description: "Tudo certo",
+          },
+          error: {
+            title: "Erro ao editar evento",
+            description: "Algo deu errado",
+          },
+          loading: {
+            title: "Editando evento",
+            description: "Por favor, aguarde",
+          },
+        }
+      );
+    }
+
+    return handleDimissEvent();
+  };
+  const handleConfirmationCreateEvent = (value: PropsEvent) => {
+    setModal((state) => {
+      return { ...state, isLoading: true };
+    });
+
+    if (value) {
+      const { id, ...rest } = value;
+      return toast.promise(
+        createEvent({ _id: id, ...rest }).finally(() => {
+          return handleDimissEvent();
+        }),
+        {
+          success: {
+            title: "Evento criado com sucesso",
+            description: "Tudo certo",
+          },
+          error: {
+            title: "Erro ao criar evento",
+            description: "Algo deu errado",
+          },
+          loading: {
+            title: "Criando evento",
+            description: "Por favor, aguarde",
+          },
+        }
+      );
+    }
+
+    return handleDimissEvent();
+  };
+
   return (
     <>
       <Header />
@@ -86,158 +224,61 @@ export const Calendar = () => {
                 height="100%"
                 plugins={[dayGridPlugin, interactionPlugin]}
                 initialView="dayGridMonth"
-                // dateClick={(val) => console.log(val)}
-                eventClick={(val) => {
-                  onOpen();
-                  console.log(val.event.id, val.event.title);
+                dateClick={(val) => {
+                  setModal((state) => {
+                    return {
+                      ...state,
+                      type: "create",
+                      isOpen: true,
+                      isLoading: true,
+                      options: { ...state.options, startTime: val.dateStr },
+                    };
+                  });
+
+                  setTimeout(() => {
+                    setModal((state) => {
+                      return {
+                        ...state,
+                        isLoading: false,
+                      };
+                    });
+                  }, 1000);
                 }}
-                events={[
-                  { id: "1", title: "event 1", date: "2024-01-01" },
-                  { id: "2", title: "event 2", date: "2024-01-02" },
-                ]}
+                eventClick={(val: any) => {
+                  const eventClick = dataEvents.find(
+                    (event) => event.id === val.event.id
+                  );
+
+                  if (eventClick) {
+                    setModal((state) => {
+                      return { ...state, isOpen: true, options: eventClick };
+                    });
+                  }
+                }}
+                events={
+                  dataEvents
+                  //   [
+                  //   { id: "1", title: "event 1", date: "2024-01-01" },
+                  //   { id: "2", title: "event 2", date: "2024-01-02" },
+                  // ]
+                }
                 eventContent={renderEventContent}
               />
             </Box>
           </Stack>
         </Container>
       </div>
-      <Modal
-        initialFocusRef={initialRef}
-        finalFocusRef={finalRef}
-        isOpen={isOpen}
-        onClose={onClose}
-      >
-        <ModalOverlay />
-        <ModalContent marginRight="20px" marginLeft="20px">
-          <ModalHeader>Entrevista de Emprego</ModalHeader>
-          <ModalCloseButton />
-
-          {isRemove ? (
-            <ModalBody>
-              {isLoading ? (
-                <Stack>
-                  <Skeleton height="20px" />
-                  <Skeleton height="20px" />
-                  <Skeleton height="20px" />
-                </Stack>
-              ) : (
-                <>
-                  <Text>Tem certeza que deseja remover o evento?</Text>
-                </>
-              )}
-            </ModalBody>
-          ) : isEdit ? (
-            <ModalBody>
-              {isLoading ? (
-                <Stack>
-                  <Skeleton height="20px" />
-                  <Skeleton height="20px" />
-                  <Skeleton height="20px" />
-                </Stack>
-              ) : (
-                <>
-                  <FormControl>
-                    <FormLabel>Hora de início</FormLabel>
-                    <Input readOnly ref={initialRef} placeholder="First name" />
-                  </FormControl>
-                  <FormControl mt={4}>
-                    <FormLabel>Hora de término</FormLabel>
-                    <Input readOnly placeholder="Last name" />
-                  </FormControl>
-                  <FormControl mt={4}>
-                    <FormLabel>Descrição</FormLabel>
-                    <Textarea
-                      readOnly
-                      placeholder="Last name"
-                      value="teadfqwefweq"
-                    />
-                  </FormControl>
-                </>
-              )}
-            </ModalBody>
-          ) : (
-            <ModalBody>
-              {isLoading ? (
-                <Stack>
-                  <Skeleton height="20px" />
-                  <Skeleton height="20px" />
-                  <Skeleton height="20px" />
-                </Stack>
-              ) : (
-                <>
-                  <Grid padding="20px" templateColumns="repeat(2, 1fr)" gap={6}>
-                    <GridItem w="100%" h="10">
-                      <Heading as="h4" size="md">
-                        Hora de início
-                      </Heading>
-                      <Text fontSize="medium">21/01/2024</Text>
-                    </GridItem>
-                    <GridItem w="100%" h="10">
-                      <Heading as="h4" size="md">
-                        Hora de término
-                      </Heading>
-                      <Text fontSize="medium">21/01/2024</Text>
-                    </GridItem>
-                  </Grid>
-                  <Divider />
-                  <Stack padding="20px">
-                    <Heading textAlign="center" as="h4" size="md">
-                      Descrição
-                    </Heading>
-                    <Text fontSize="medium">21/01/2024</Text>
-                  </Stack>
-                </>
-              )}
-            </ModalBody>
-          )}
-
-          <ModalFooter>
-            {isRemove ? (
-              isLoading ? (
-                <Stack>
-                  <Skeleton height="20px" />
-                  <Skeleton height="20px" />
-                </Stack>
-              ) : (
-                <>
-                  <Button colorScheme="red" mr={3}>
-                    Remover
-                  </Button>
-                  <Button onClick={onClose}>Cancelar</Button>
-                </>
-              )
-            ) : isEdit ? (
-              isLoading ? (
-                <Stack>
-                  <Skeleton height="20px" />
-                  <Skeleton height="20px" />
-                </Stack>
-              ) : (
-                <>
-                  <Button colorScheme="blue" mr={3}>
-                    Salvar
-                  </Button>
-                  <Button onClick={onClose}>Cancelar</Button>
-                </>
-              )
-            ) : isLoading ? (
-              <Stack>
-                <Skeleton height="20px" />
-                <Skeleton height="20px" />
-              </Stack>
-            ) : (
-              <>
-                <Button onClick={handleEditEvent} colorScheme="blue" mr={3}>
-                  Editar
-                </Button>
-                <Button onClick={handleRemoveEvent} colorScheme="red" mr={3}>
-                  Remover
-                </Button>
-              </>
-            )}
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      <ModalActions
+        isOpen={modal.isOpen}
+        onClose={handleDimissEvent}
+        isLoading={modal.isLoading}
+        handleEditEvent={() => handleActionEvent("edit")}
+        handleRemoveEvent={() => handleActionEvent("remove")}
+        createEvent={handleConfirmationCreateEvent}
+        editEvent={handleConfirmationEditEvent}
+        removeEvent={handleConfirmationRemoveEvent}
+        modalTypes={modal}
+      />
     </>
   );
 };

@@ -14,3 +14,13 @@ export interface DataRegister {
   email: string;
   password: string;
 }
+
+export interface EventData {
+  _id: string;
+  title: string;
+  description: string;
+  startTime: string;
+  endTime: string;
+  userId?: string;
+  __v?: number;
+}

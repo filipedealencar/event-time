@@ -11,14 +11,9 @@ const Routers: React.FC = ({}) => {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Calendar />
-            </ProtectedRoute>
-          }
-        />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/" element={<Calendar />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );
