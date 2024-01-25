@@ -1,30 +1,57 @@
-# React + TypeScript + Vite
+# Event Time (Front-end) - Luis Filipe J Alencar
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+O Event Time (Front-end) é a interface de usuário do sistema de gerenciamento de eventos, proporcionando uma experiência intuitiva e amigável para visualização e interação com os dados dos eventos. Este projeto foi desenvolvido utilizando React, com Vite e TypeScript, e inclui a biblioteca Chakra UI.
 
-Currently, two official plugins are available:
+## Desenvolvedor
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+O Event Time foi 100% desenvolvido por Luis Filipe Joaquim de Alencar
 
-## Expanding the ESLint configuration
+## Funcionalidades
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+- **Visualize e interaja com os dados dos eventos.**
 
-- Configure the top-level `parserOptions` property like this:
+## Tecnologias Utilizadas
 
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
+- **React com Vite.js:** Vite.js é um framework de desenvolvimento rápido para o ecossistema React, proporcionando uma experiência de desenvolvimento eficiente e rápida.
+- **TypeScript:** Adiciona tipagem estática ao JavaScript, trazendo benefícios de legibilidade e manutenibilidade ao código.
+- **Chakra UI:** Uma biblioteca de componentes React que facilita a construção de interfaces de usuário bonitas e acessíveis.
+
+## Principais Destaques
+
+- **Interface intuitiva e fácil de usar.**
+- **Atualização dinâmica dos dados dos eventos.**
+- **Estilização moderna e consistente com Chakra UI.**
+
+## Como Executar o Projeto
+
+To get started with the project, follow these steps:
+
+1. **Clone o repositório::**
+
+```bash
+ https://github.com/filipedealencar/event-time.git
 ```
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+2. **Entre no repositório do projeto**
+
+```bash
+cd event-time
+```
+
+3. **Instale as dependências:**
+
+```bash
+yarn install
+```
+
+4. **Inicie a aplicação:**
+
+```bash
+   yarn vite
+```
+
+Agora você pode acessar o projeto em http://localhost:5173/.
+
+## Contribuições
+
+Contribuições são bem-vindas! Se você encontrar problemas, bugs ou melhorias potenciais, sinta-se à vontade para abrir uma issue ou enviar um pull request.
